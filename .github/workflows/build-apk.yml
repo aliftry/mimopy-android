@@ -21,11 +21,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Extract Android project ZIP
+        shell: bash
         run: |
+          set -e
           test -f Mimopy-Android-Build.zip
           unzip -q Mimopy-Android-Build.zip -d .
           test -f mimopy_android_build/settings.gradle
           test -f mimopy_android_build/app/build.gradle
+          echo "Project Android ditemukan."
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -36,11 +39,12 @@ jobs:
       - name: Configure Android SDK
         shell: bash
         run: |
+          set -e
           SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           SDKMANAGER="$(find "$SDK/cmdline-tools" -type f -name sdkmanager | head -n 1)"
 
           if [ -z "$SDKMANAGER" ]; then
-            echo "ERROR: sdkmanager tidak ditemukan"
+            echo "ERROR: sdkmanager tidak ditemukan."
             exit 1
           fi
 
@@ -51,9 +55,13 @@ jobs:
 
       - name: Accept Android SDK licenses
         shell: bash
-        run: yes | sdkmanager --licenses
+        run: |
+          set +o pipefail
+          yes | sdkmanager --licenses || true
+          sdkmanager --licenses
 
       - name: Install Android packages
+        shell: bash
         run: |
           sdkmanager \
             "platforms;android-35" \
